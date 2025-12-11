@@ -43,4 +43,7 @@ dependencies {
     androidTestImplementation(libs.espresso.core)
 
     implementation("com.google.code.gson:gson:2.13.2")
+
+    implementation("androidx.lifecycle:lifecycle-viewmodel:2.8.7")
+    implementation("androidx.lifecycle:lifecycle-livedata:2.8.7")
 }

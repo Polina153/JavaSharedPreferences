@@ -13,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -24,11 +25,12 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity  implements NotesView {
+public class MainActivity extends AppCompatActivity{
 
     private RecyclerView recyclerView;
     private NotesAdapter notesAdapter;
-    private NotesPresenter presenter;
+
+    private NotesViewModel viewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,30 +50,24 @@ public class MainActivity extends AppCompatActivity  implements NotesView {
         notesAdapter = new NotesAdapter(new ArrayList<>());
         recyclerView.setAdapter(notesAdapter);
 
-        presenter = new NotesPresenter(this, this);
-        presenter.loadNotes();
+        viewModel = new ViewModelProvider(this).get(NotesViewModel.class);
+        viewModel.init(getApplicationContext());
 
-        findViewById(R.id.fab).setOnClickListener(v -> presenter.onAddNoteClicked());
-    }
+        viewModel.getNotes().observe(this, notes -> {
+            if (notes == null || notes.isEmpty()) {
+                recyclerView.setVisibility(View.GONE);
+            } else {
+                recyclerView.setVisibility(View.VISIBLE);
+                notesAdapter.setNewData(new ArrayList<>(notes));
+            }
+        });
 
-    @Override
-    public void showNotes(List<UserNote> notes) {
-        recyclerView.setVisibility(View.VISIBLE);
-        notesAdapter.setNewData(new ArrayList<>(notes));
-    }
+        viewModel.getMessage().observe(this, msg -> {
+            if (msg != null && !msg.isEmpty()) {
+                Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+            }
+        });
 
-    @Override
-    public void showEmptyState() {
-        recyclerView.setVisibility(View.GONE);
-    }
-
-    @Override
-    public void showError(String message) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void showMessage(String message) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        findViewById(R.id.fab).setOnClickListener(v -> viewModel.addNote());
     }
 }
